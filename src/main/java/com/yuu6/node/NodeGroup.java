@@ -41,7 +41,8 @@ public class NodeGroup {
 
     public Collection<GroupMember> listReplicationTarget() {
         return memberMap.values().stream().filter(
-                m -> !m.getEndpoint().getId().equals(selfId)).collect(Collectors.toList());
+                m -> !m.getEndpoint().getId().equals(selfId)
+        ).collect(Collectors.toList());
     }
 
     public Set<NodeEndpoint> listEndpointExceptSelf(){

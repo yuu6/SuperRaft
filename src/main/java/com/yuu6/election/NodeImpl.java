@@ -175,6 +175,7 @@ public class NodeImpl implements Node{
     }
 
     private void doReplicateLog(){
+        System.out.println("发送心跳时的节点数目"+ context.getNodeGroup().listReplicationTarget().size());
         for (GroupMember member : context.getNodeGroup().listReplicationTarget()) {
             doReplicateLog0(member);
         }

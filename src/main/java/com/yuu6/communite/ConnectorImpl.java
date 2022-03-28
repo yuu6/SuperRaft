@@ -92,8 +92,12 @@ public class ConnectorImpl implements Connector{
     @Override
     public void sendAppendEntries(AppendEntriesReq req, NodeEndpoint endpoint) {
         System.out.println(String.format("Leader给%s发送心跳请求", endpoint.getId()));
-        NioChannel nioChannel = outBoundChannelGroup.getOrConnect(endpoint.getId(), endpoint.getAddress());
-        nioChannel.writeAppendEntriesReq(req);
+        try {
+            NioChannel nioChannel = outBoundChannelGroup.getOrConnect(endpoint.getId(), endpoint.getAddress());
+            nioChannel.writeAppendEntriesReq(req);
+        }catch (Exception e){
+            System.out.println(String.format("Leader给%s发送心跳请求失败", endpoint.getId()));
+        }
     }
 
     @Override

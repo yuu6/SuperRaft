@@ -68,7 +68,7 @@ public class NodeBuilder {
         context.setNodeGroup(nodeGroup);
         context.setSelfId(nodeId);
         context.setEventBus(eventBus);
-        context.setScheduler(scheduler != null ? scheduler : new DefaultScheduler(8000, 10000, 1000, 1000));
+        context.setScheduler(scheduler != null ? scheduler : new DefaultScheduler(8000, 120000, 1000, 1000));
         context.setConnector(connector);
         context.setTaskExecutor(
                 taskExecutor != null ? taskExecutor : new SingleThreadTaskExecutor("node")
