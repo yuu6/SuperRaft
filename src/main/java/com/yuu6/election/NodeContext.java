@@ -1,11 +1,12 @@
 package com.yuu6.election;
 
+import com.google.common.eventbus.EventBus;
+import com.yuu6.communite.Connector;
 import com.yuu6.election.scheduler.Scheduler;
+import com.yuu6.log.Log;
 import com.yuu6.node.GroupMember;
 import com.yuu6.node.NodeGroup;
 import com.yuu6.node.NodeId;
-import com.google.common.eventbus.EventBus;
-import com.yuu6.communite.Connector;
 
 /**
  * 间接层类
@@ -22,6 +23,15 @@ public class NodeContext {
     // 任务执行
     private TaskExecutor taskExecutor;
     private NodeStore store;
+    private Log log;
+
+    public Log getLog() {
+        return log;
+    }
+
+    public void setLog(Log log) {
+        this.log = log;
+    }
 
     public NodeId selfId(){
         return selfId;

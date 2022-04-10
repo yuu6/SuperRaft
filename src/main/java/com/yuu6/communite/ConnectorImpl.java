@@ -1,19 +1,21 @@
 package com.yuu6.communite;
 
 import com.google.common.eventbus.EventBus;
+import com.yuu6.communite.channels.*;
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.AppendEntriesResult;
 import com.yuu6.mess.RequestVoteReq;
 import com.yuu6.mess.RequestVoteResult;
 import com.yuu6.node.NodeEndpoint;
 import com.yuu6.node.NodeId;
-import com.yuu6.communite.channels.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -22,6 +24,8 @@ import java.util.Collection;
  * @Date: 2022/03/26/下午2:34
  */
 public class ConnectorImpl implements Connector{
+    private static final Logger logger = LoggerFactory.getLogger(ConnectorImpl.class);
+
     private final NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);
 
     private final NioEventLoopGroup workGroup;
@@ -77,14 +81,14 @@ public class ConnectorImpl implements Connector{
                 NioChannel nioChannel = outBoundChannelGroup.getOrConnect(endpoint.getId(), endpoint.getAddress());
                 nioChannel.writeRequestVoteReq(req);
             }catch (Exception e){
-                System.out.println("连接不上" + endpoint.getAddress().getPort());
+                logger.error("connect node {} fail!", endpoint.getAddress());
             }
         }
     }
 
     @Override
     public void replyRequestVote(RequestVoteResult result, NodeEndpoint endpoint) {
-        System.out.println(String.format("给 %s 发送投票结果", endpoint.getId()));
+        logger.info("reply request vote to {}", endpoint.getAddress());
         NioChannel nioChannel = outBoundChannelGroup.getOrConnect(endpoint.getId(), endpoint.getAddress());
         nioChannel.writeRequsetVoteResult(result);
     }

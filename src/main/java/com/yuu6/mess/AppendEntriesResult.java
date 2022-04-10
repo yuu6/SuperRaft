@@ -1,8 +1,11 @@
 package com.yuu6.mess;
 
+// 日志复制的结果
 public class AppendEntriesResult {
-
+    // 选举轮次
     public final int term;
+    // 是否成功
+    private final boolean success;
 
     public int getTerm() {
         return term;
@@ -20,7 +23,6 @@ public class AppendEntriesResult {
         return success;
     }
 
-    private final boolean success;
 
 
     public AppendEntriesResult(int term, boolean success) {

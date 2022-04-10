@@ -19,4 +19,11 @@ public class Address {
         this.port = port;
     }
 
+    @Override
+    public String toString() {
+        return "Address{" +
+                "host='" + host + '\'' +
+                ", port=" + port +
+                '}';
+    }
 }

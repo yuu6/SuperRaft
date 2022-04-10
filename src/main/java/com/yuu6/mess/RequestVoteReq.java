@@ -2,9 +2,13 @@ package com.yuu6.mess;
 
 import com.yuu6.node.NodeId;
 
+/**
+ * 请求投票的消息
+ */
 public class RequestVoteReq {
     private int term;
     private NodeId candidateId; // 候选者的节点Id，一般都是发送者自己
+    // 上一条日志的信息
     private int lastLogIndex = 0; // 候选者最后一条日志的索引
     private int lastLogTerm = 0; // 候选者最后一条日志的term
 

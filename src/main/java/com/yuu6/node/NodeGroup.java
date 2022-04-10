@@ -58,4 +58,54 @@ public class NodeGroup {
     public int getCount() {
         return memberMap.size();
     }
+
+    public int getMatchIndexOfMajor(){
+        List<NodeMatchIndex> matchIndices = new ArrayList<>();
+        for (GroupMember member:memberMap.values()) {
+            if (!member.equals(selfId)){
+                matchIndices.add(new NodeMatchIndex(member.getEndpoint().getId(), member.getMatchIndex()));
+            }
+        }
+
+        int count = matchIndices.size();
+        if (count == 0){
+            throw new IllegalStateException("standalone or no major node");
+        }
+        Collections.sort(matchIndices);
+        return matchIndices.get(count / 2).getMatchIndex();
+    }
+
+    public static class NodeMatchIndex implements Comparable<NodeMatchIndex>{
+        // 节点ID
+        private final NodeId nodeId;
+        // 匹配的下标
+        private final int matchIndex;
+
+        @Override
+        public String toString() {
+            return "NodeMatchIndex{" +
+                    "nodeId=" + nodeId +
+                    ", matchIndex=" + matchIndex +
+                    '}';
+        }
+
+
+        NodeMatchIndex(NodeId nodeId, int matchIndex){
+            this.nodeId = nodeId;
+            this.matchIndex = matchIndex;
+        }
+
+        @Override
+        public int compareTo(NodeMatchIndex o) {
+            return Integer.compare(this.matchIndex, o.matchIndex);
+        }
+
+        public NodeId getNodeId() {
+            return nodeId;
+        }
+
+        public int getMatchIndex() {
+            return matchIndex;
+        }
+    }
 }

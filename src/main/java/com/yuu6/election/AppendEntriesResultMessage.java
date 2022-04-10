@@ -16,6 +16,14 @@ public class AppendEntriesResultMessage {
     private NodeId sourceNodeId;
 
     private AppendEntriesReq lastAppendEntriesReq;
+    public AppendEntriesReq getLastAppendEntriesReq() {
+        return lastAppendEntriesReq;
+    }
+
+    public void setLastAppendEntriesReq(AppendEntriesReq lastAppendEntriesReq) {
+        this.lastAppendEntriesReq = lastAppendEntriesReq;
+    }
+
 
     public AppendEntriesResultMessage(AppendEntriesResult result, NodeId remoteId, AppendEntriesReq lastAppendEntriesReq){
         this.appendEntriesResult= result;

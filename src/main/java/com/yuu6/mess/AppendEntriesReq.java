@@ -1,5 +1,6 @@
 package com.yuu6.mess;
 
+import com.yuu6.log.entry.Entry;
 import com.yuu6.node.NodeId;
 
 import java.util.Collections;
@@ -10,8 +11,9 @@ public class AppendEntriesReq {
     private NodeId leaderId;
     private int prevLogIndex = 0; // 前一条日志的索引
     private int prevLogTerm; // 前一条日志的term
-    private List<Object> entries = Collections.emptyList();
+    private List<Entry> entries = Collections.emptyList();
     private int leaderCommit;
+//    private int lastAppendEntryIndex;
 
     @Override
     public String toString() {
@@ -57,11 +59,11 @@ public class AppendEntriesReq {
         this.prevLogTerm = prevLogTerm;
     }
 
-    public List<Object> getEntries() {
+    public List<Entry> getEntries() {
         return entries;
     }
 
-    public void setEntries(List<Object> entries) {
+    public void setEntries(List<Entry> entries) {
         this.entries = entries;
     }
 
@@ -71,5 +73,9 @@ public class AppendEntriesReq {
 
     public void setLeaderCommit(int leaderCommit) {
         this.leaderCommit = leaderCommit;
+    }
+
+    public int getLastAppendEntryIndex() {
+        return prevLogIndex;
     }
 }

@@ -8,12 +8,14 @@ import com.yuu6.election.*;
 import com.yuu6.election.NodeStoreImpl.MemoryNodeStore;
 import com.yuu6.election.scheduler.DefaultScheduler;
 import com.yuu6.election.scheduler.Scheduler;
+import com.yuu6.log.FileLog;
 import com.yuu6.node.Address;
 import com.yuu6.node.NodeEndpoint;
 import com.yuu6.node.NodeGroup;
 import com.yuu6.node.NodeId;
 import io.netty.channel.nio.NioEventLoopGroup;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +75,8 @@ public class NodeBuilder {
         context.setTaskExecutor(
                 taskExecutor != null ? taskExecutor : new SingleThreadTaskExecutor("node")
         );
+
+        context.setLog(new FileLog(new File("./log")));
         return context;
     }
 

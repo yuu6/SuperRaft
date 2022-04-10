@@ -1,6 +1,8 @@
 package com.yuu6.election;
 
 
+import com.yuu6.log.EntryMeta;
+import com.yuu6.log.Log;
 import com.yuu6.mess.*;
 import com.yuu6.role.*;
 import com.google.common.eventbus.Subscribe;
@@ -68,16 +70,18 @@ public class NodeImpl implements Node{
         int newTerm = role.getTerm() + 1;
         role.cancelTimeoutOrTask();
         logger.info("start election!!");
-        System.out.println("======开始选举！！！！！！=======");
 
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
         RequestVoteReq req = new RequestVoteReq();
         req.setTerm(newTerm);
         req.setCandidateId(context.selfId());
-        req.setLastLogIndex(0);
-        req.setLastLogTerm(0);
-        System.out.println(String.format("目前是第%s轮次", newTerm));
+        // 从日志中获取之前一条日志的信息
+        EntryMeta entryMeta = context.getLog().getLastEntryMeta();
+        req.setLastLogIndex(entryMeta.getIndex());
+        req.setLastLogTerm(entryMeta.getTerm());
+
+        logger.info("current term is {}", newTerm);
         // 给所有节点发送投票的消息
         context.getConnector().sendRequestVote(req, context.getNodeGroup().listEndpointExceptSelf());
     }
@@ -166,6 +170,7 @@ public class NodeImpl implements Node{
         }
     }
 
+    // 变为leader之后需要定期复制日志
     private LogReplicationTask scheduleLogReplicationTask() {
         return context.getScheduler().scheduleLogReplicationTask(this::replicateLog);
     }
@@ -181,14 +186,16 @@ public class NodeImpl implements Node{
         }
     }
 
-    private void doReplicateLog0(GroupMember member){
-        AppendEntriesReq rpc = new AppendEntriesReq();
-        rpc.setTerm(role.getTerm());
-        rpc.setLeaderId(context.selfId());
-        rpc.setPrevLogIndex(0);
-        rpc.setPrevLogTerm(0);
-        rpc.setLeaderCommit(0);
-        context.getConnector().sendAppendEntries(rpc, member.getEndpoint());
+    /**
+     * 发送日志复制的请求, 需要查询出需要复制的日志条目，封装为请求
+     * @param targetMember
+     */
+    private void doReplicateLog0(GroupMember targetMember){
+        // 通过日志组件获得复制日志的请求
+        AppendEntriesReq rpc = context.getLog().createAppendEntriesReq(
+                role.getTerm(), context.selfId(), targetMember.getNextIndex(), Log.ALL_ENTRIES
+        );
+        context.getConnector().sendAppendEntries(rpc, targetMember.getEndpoint());
     }
 
     private RequestVoteResult doProcessRequestVoteReq(RequestVoteReqMessage rpcMessage){
@@ -197,7 +204,8 @@ public class NodeImpl implements Node{
             logger.debug("term from rpc < currnet term, don`t vote ({} < {})", rpc.getTerm(), role.getTerm());
             return new RequestVoteResult(role.getTerm(), false);
         }
-        boolean voteForCandidate = true;
+        // 判断是不是更新
+        boolean voteForCandidate = !context.getLog().isNewerThan(rpc.getLastLogIndex(), rpc.getLastLogTerm());
 
         if (rpc.getTerm() > role.getTerm()){
             becomeFollower(rpc.getTerm(), (voteForCandidate ? rpc.getCandidateId(): null), null, true);
@@ -285,7 +293,14 @@ public class NodeImpl implements Node{
     }
 
     private boolean appendEntries(AppendEntriesReq req) {
-        return true;
+        boolean result = context.getLog().appendEntriesFromLeader(req.getPrevLogIndex(), req.getPrevLogTerm(),
+                req.getEntries());
+        if (result){
+            context.getLog().advanceCommitIndex(
+                    Math.min(req.getLeaderCommit(), req.getPrevLogIndex()), req.getTerm()
+            );
+        }
+        return result;
     }
 
     @Subscribe
@@ -293,9 +308,13 @@ public class NodeImpl implements Node{
         context.getTaskExecutor().submit(() -> doProcessAppendEntriesResult(resultMessage));
     }
 
+    /**
+     * 处理心跳或者日志复制的结果
+     * @param resultMessage
+     */
     private void doProcessAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         AppendEntriesResult result = resultMessage.getAppendEntriesResult();
-
+        // 如果term大于本角色的role,则转变为role角色
         if (result.getTerm() > role.getTerm()){
             becomeFollower(result.getTerm(), null, null, true);
             return;
@@ -304,5 +323,31 @@ public class NodeImpl implements Node{
         if (role.getName() != RoleName.LEADER){
             System.out.println("从其他的节点收到了心跳消息");
         }
+        // 源头节点
+        NodeId sourceNodeId = resultMessage.getSourceNodeId();
+        GroupMember groupMember = context.getNodeGroup().getMember(sourceNodeId);
+        // 没有指定的成员
+        if (groupMember == null){
+            logger.info("unexpected append entries resurl from node {}, node maybe removed", sourceNodeId);
+            return;
+        }
+        AppendEntriesReq req = resultMessage.getLastAppendEntriesReq();
+
+        if (result.isSuccess()){
+            // 推进日志复制状态
+            if (groupMember.advanceReplicatingState(req.getLastAppendEntryIndex())){
+                // 推荐commitIndex
+                context.getLog().advanceCommitIndex(
+                        context.getNodeGroup().getMatchIndexOfMajor(), role.getTerm()
+                );
+            }
+        }else{
+            // 对方回复失败
+            logger.error("对方回复失败！");
+//            if (!groupMember.backOffNextIndex()){
+//
+//            }
+        }
+
     }
 }
