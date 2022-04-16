@@ -10,11 +10,12 @@ public class GroupMember {
     // 复制状态
     private ReplicatingState replicatingState;
 
-    GroupMember(NodeEndpoint endpoint) {
-        this.endpoint = endpoint;
+    public GroupMember(NodeEndpoint endpoint) {
+//        this.endpoint = endpoint;
+        this(endpoint, new ReplicatingState(0, 0));
     }
     // 带日志的构造器
-    GroupMember(NodeEndpoint endpoint, ReplicatingState replicatingState){
+    public GroupMember(NodeEndpoint endpoint, ReplicatingState replicatingState){
         this.endpoint = endpoint;
         this.replicatingState = replicatingState;
     }
@@ -47,7 +48,7 @@ public class GroupMember {
     }
 
     // 复制进度
-    public class ReplicatingState {
+    public static class ReplicatingState {
         // 匹配的下标
         private int matchIndex;
         // 下一个下标

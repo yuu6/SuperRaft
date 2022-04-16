@@ -34,15 +34,17 @@ public class NodeBuilder {
     private Scheduler scheduler = null;
     private Connector connector = null;
     private TaskExecutor taskExecutor = null;
+    private String logSuffix = "";
 
-    public NodeBuilder(NodeEndpoint endpoint, EventBus eventBus){
-        this(Collections.singletonList(endpoint), endpoint.getId(), eventBus);
+    public NodeBuilder(NodeEndpoint endpoint, EventBus eventBus, String logSuffix){
+        this(Collections.singletonList(endpoint), endpoint.getId(), eventBus, logSuffix);
     }
 
-    public NodeBuilder(List<NodeEndpoint> endpoints, NodeId nodeId, EventBus eventBus){
+    public NodeBuilder(List<NodeEndpoint> endpoints, NodeId nodeId, EventBus eventBus, String logSuffix){
         this.nodeGroup = new NodeGroup(endpoints, nodeId);
         this.nodeId = nodeId;
         this.eventBus = eventBus;
+        this.logSuffix = logSuffix;
     }
 
     NodeBuilder setConnector(Connector connector){
@@ -75,8 +77,8 @@ public class NodeBuilder {
         context.setTaskExecutor(
                 taskExecutor != null ? taskExecutor : new SingleThreadTaskExecutor("node")
         );
-
-        context.setLog(new FileLog(new File("./log")));
+        // 设置日志状态及
+        context.setLog(new FileLog(new File("./log-" + logSuffix)));
         return context;
     }
 
@@ -92,12 +94,12 @@ public class NodeBuilder {
         }};
     }
 
-    public static NodeBuilder getBuilder(String nodeId){
+    public static NodeBuilder getBuilder(String nodeId, String suffix){
         Map<String, NodeEndpoint> nodeMap = nodeMap();
         NodeEndpoint selfNode = nodeMap.get(nodeId);
         EventBus eventBus = new EventBus(nodeId);
 
-        NodeBuilder nodeBuilder = new NodeBuilder(Lists.newArrayList(nodeMap.values()), selfNode.getId(), eventBus);
+        NodeBuilder nodeBuilder = new NodeBuilder(Lists.newArrayList(nodeMap.values()), selfNode.getId(), eventBus, suffix);
         // 创建工作者线程
         NioEventLoopGroup workGroup = new NioEventLoopGroup(4);
         // 创建通信模块
@@ -108,7 +110,8 @@ public class NodeBuilder {
     }
 
     public static void main(String[] args) {
-        NodeBuilder aBuilder = getBuilder(args[0]);
+
+        NodeBuilder aBuilder = getBuilder(args[0], args[1]);
         Node a = aBuilder.build();
         a.start();
     }

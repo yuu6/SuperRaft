@@ -3,7 +3,7 @@ package com.yuu6.communite;
 import com.yuu6.mess.AppendEntriesResult;
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.RequestVoteResult;
-import com.yuu6.mess.RequestVoteReq;
+import com.yuu6.mess.RequestVoteRpc;
 import com.yuu6.node.NodeEndpoint;
 
 import java.util.Collection;
@@ -23,7 +23,7 @@ public interface Connector {
      * @param rpc
      * @param endpoints
      */
-    void sendRequestVote(RequestVoteReq rpc, Collection<NodeEndpoint> endpoints);
+    void sendRequestVote(RequestVoteRpc rpc, Collection<NodeEndpoint> endpoints);
 
     /**
      * 回复投票信息

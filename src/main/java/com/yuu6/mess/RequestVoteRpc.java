@@ -5,7 +5,7 @@ import com.yuu6.node.NodeId;
 /**
  * 请求投票的消息
  */
-public class RequestVoteReq {
+public class RequestVoteRpc {
     private int term;
     private NodeId candidateId; // 候选者的节点Id，一般都是发送者自己
     // 上一条日志的信息

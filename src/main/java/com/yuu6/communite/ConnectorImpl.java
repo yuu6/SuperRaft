@@ -4,7 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.yuu6.communite.channels.*;
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.AppendEntriesResult;
-import com.yuu6.mess.RequestVoteReq;
+import com.yuu6.mess.RequestVoteRpc;
 import com.yuu6.mess.RequestVoteResult;
 import com.yuu6.node.NodeEndpoint;
 import com.yuu6.node.NodeId;
@@ -74,7 +74,7 @@ public class ConnectorImpl implements Connector{
     }
 
     @Override
-    public void sendRequestVote(RequestVoteReq req, Collection<NodeEndpoint> endpoints) {
+    public void sendRequestVote(RequestVoteRpc req, Collection<NodeEndpoint> endpoints) {
         for (NodeEndpoint endpoint : endpoints) {
             System.out.println(String.format("向%s发送请求投票消息",  endpoint.getId()));
             try {

@@ -1,6 +1,5 @@
 package com.yuu6.election;
 
-
 import com.yuu6.log.EntryMeta;
 import com.yuu6.log.Log;
 import com.yuu6.mess.*;
@@ -35,6 +34,7 @@ public class NodeImpl implements Node{
         context.getEventBus().register(this);
         // 通信组件
         context.getConnector().init();
+
         NodeStore store = context.getStore();
         // 启动的时候是follower角色
         changeToRole(new FollowerNodeRole(
@@ -73,17 +73,17 @@ public class NodeImpl implements Node{
 
         changeToRole(new CandidateNodeRole(newTerm, scheduleElectionTimeout()));
 
-        RequestVoteReq req = new RequestVoteReq();
-        req.setTerm(newTerm);
-        req.setCandidateId(context.selfId());
+        RequestVoteRpc rpc = new RequestVoteRpc();
+        rpc.setTerm(newTerm);
+        rpc.setCandidateId(context.selfId());
         // 从日志中获取之前一条日志的信息
         EntryMeta entryMeta = context.getLog().getLastEntryMeta();
-        req.setLastLogIndex(entryMeta.getIndex());
-        req.setLastLogTerm(entryMeta.getTerm());
+        rpc.setLastLogIndex(entryMeta.getIndex());
+        rpc.setLastLogTerm(entryMeta.getTerm());
 
         logger.info("current term is {}", newTerm);
-        // 给所有节点发送投票的消息
-        context.getConnector().sendRequestVote(req, context.getNodeGroup().listEndpointExceptSelf());
+        // 给所有节点发送请求投票的消息
+        context.getConnector().sendRequestVote(rpc, context.getNodeGroup().listEndpointExceptSelf());
     }
 
     private void changeToRole(AbstractNodeRole newRole){
@@ -114,7 +114,7 @@ public class NodeImpl implements Node{
      * @param rpcMessage
      */
     @Subscribe
-    public void onReceiveRequestVoteReq(RequestVoteReqMessage rpcMessage){
+    public void onReceiveRequestVoteReq(RequestVoteRpcMessage rpcMessage){
         System.out.println(String.format("节点%s处理%s的投票请求！", context.selfId(), rpcMessage.getNodeId()));
         context.getTaskExecutor().submit(
                 // 发送投票信息
@@ -164,6 +164,7 @@ public class NodeImpl implements Node{
         // 票数过半
         if (currentVotesCount > countOfMajor / 2){
             // 变成了leader节点
+            logger.info("node {} become to leader, term is {}", context.selfId(), role.getTerm());
             changeToRole(new LeaderNodeRole(role.getTerm(), scheduleLogReplicationTask()));
         }else{
             changeToRole(new CandidateNodeRole(role.getTerm(), currentVotesCount, scheduleElectionTimeout()));
@@ -182,7 +183,11 @@ public class NodeImpl implements Node{
     private void doReplicateLog(){
         System.out.println("发送心跳时的节点数目"+ context.getNodeGroup().listReplicationTarget().size());
         for (GroupMember member : context.getNodeGroup().listReplicationTarget()) {
-            doReplicateLog0(member);
+            try {
+                doReplicateLog0(member);
+            }catch (Exception e){
+                logger.error("发送复制日志消息的时候报错", e);
+            }
         }
     }
 
@@ -198,8 +203,8 @@ public class NodeImpl implements Node{
         context.getConnector().sendAppendEntries(rpc, targetMember.getEndpoint());
     }
 
-    private RequestVoteResult doProcessRequestVoteReq(RequestVoteReqMessage rpcMessage){
-        RequestVoteReq rpc = rpcMessage.getRequestVoteRpc();
+    private RequestVoteResult doProcessRequestVoteReq(RequestVoteRpcMessage rpcMessage){
+        RequestVoteRpc rpc = rpcMessage.getRequestVoteRpc();
         if (rpc.getTerm() < role.getTerm()){
             logger.debug("term from rpc < currnet term, don`t vote ({} < {})", rpc.getTerm(), role.getTerm());
             return new RequestVoteResult(role.getTerm(), false);
@@ -253,16 +258,17 @@ public class NodeImpl implements Node{
      * @param reqMessage
      */
     @Subscribe
-    public void onReceiveAppendEntriesReq(AppendEntriesReqMessage reqMessage){
+    public void onReceiveAppendEntriesReq(AppendEntriesRpcMessage reqMessage){
+        logger.info("node {} get append entry message from {}", context.selfId(), reqMessage.getAppendEntriesReq().getLeaderId());
         context.getTaskExecutor().submit(() ->
                 context.getConnector().replyAppendEntries(
-                        doProcessAppendEntriesReq(reqMessage),
+                        doProcessAppendEntriesRpc(reqMessage),
                         context.findMember(reqMessage.getSourceNodeId()).getEndpoint()
                 )
         );
     }
 
-    private AppendEntriesResult doProcessAppendEntriesReq(AppendEntriesReqMessage reqMessage) {
+    private AppendEntriesResult doProcessAppendEntriesRpc(AppendEntriesRpcMessage reqMessage) {
         AppendEntriesReq req = reqMessage.getAppendEntriesReq();
         // 如果自己的比对象的term大，则回复自己的term
         if (req.getTerm() < role.getTerm()){
@@ -315,13 +321,14 @@ public class NodeImpl implements Node{
     private void doProcessAppendEntriesResult(AppendEntriesResultMessage resultMessage) {
         AppendEntriesResult result = resultMessage.getAppendEntriesResult();
         // 如果term大于本角色的role,则转变为role角色
+        logger.info("get append entry result from {} term {}", resultMessage.getSourceNodeId(), result.getTerm());
         if (result.getTerm() > role.getTerm()){
             becomeFollower(result.getTerm(), null, null, true);
             return;
         }
 
         if (role.getName() != RoleName.LEADER){
-            System.out.println("从其他的节点收到了心跳消息");
+            System.out.println("从其他的节点收到了心跳消息的结果");
         }
         // 源头节点
         NodeId sourceNodeId = resultMessage.getSourceNodeId();

@@ -3,7 +3,7 @@ package com.yuu6.communite.channels;
 import com.google.gson.Gson;
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.AppendEntriesResult;
-import com.yuu6.mess.RequestVoteReq;
+import com.yuu6.mess.RequestVoteRpc;
 import com.yuu6.mess.RequestVoteResult;
 import com.yuu6.node.NodeId;
 import io.netty.buffer.ByteBuf;
@@ -41,8 +41,8 @@ public class Decoder extends ByteToMessageDecoder {
                 out.add(new NodeId(new String(payload)));
                 break;
             case MessageConstants.MSG_TYPE_REQUEST_VOTE_REQ:
-                RequestVoteReq requestVoteReq = gson.fromJson(new String(payload), RequestVoteReq.class);
-                out.add(requestVoteReq);
+                RequestVoteRpc requestVoteRpc = gson.fromJson(new String(payload), RequestVoteRpc.class);
+                out.add(requestVoteRpc);
                 break;
             case MessageConstants.MSG_TYPE_REQUEST_VOTE_RESULT:
                 RequestVoteResult result = gson.fromJson(new String(payload), RequestVoteResult.class);

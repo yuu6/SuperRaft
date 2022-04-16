@@ -2,7 +2,7 @@ package com.yuu6.communite.channels;
 
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.AppendEntriesResult;
-import com.yuu6.mess.RequestVoteReq;
+import com.yuu6.mess.RequestVoteRpc;
 import com.yuu6.mess.RequestVoteResult;
 import io.netty.channel.Channel;
 
@@ -18,8 +18,8 @@ public class NioChannel {
         this.nettyChannel = nettyChannel;
     }
 
-    public void writeRequestVoteReq(RequestVoteReq requestVoteReq){
-        nettyChannel.writeAndFlush(requestVoteReq);
+    public void writeRequestVoteReq(RequestVoteRpc requestVoteRpc){
+        nettyChannel.writeAndFlush(requestVoteRpc);
     }
 
     public void writeRequsetVoteResult(RequestVoteResult result){

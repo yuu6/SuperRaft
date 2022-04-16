@@ -20,7 +20,7 @@ public class NodeContext {
     private Scheduler scheduler;
 
     private EventBus eventBus;
-    // 任务执行
+    // 任务执行期
     private TaskExecutor taskExecutor;
     private NodeStore store;
     private Log log;

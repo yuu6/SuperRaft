@@ -29,6 +29,4 @@ public class AppendEntriesResult {
         this.term = term;
         this.success = success;
     }
-
-
 }

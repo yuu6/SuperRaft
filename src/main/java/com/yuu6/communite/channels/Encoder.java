@@ -3,7 +3,7 @@ package com.yuu6.communite.channels;
 import com.google.gson.Gson;
 import com.yuu6.mess.AppendEntriesReq;
 import com.yuu6.mess.AppendEntriesResult;
-import com.yuu6.mess.RequestVoteReq;
+import com.yuu6.mess.RequestVoteRpc;
 import com.yuu6.mess.RequestVoteResult;
 import com.yuu6.node.NodeId;
 import io.netty.buffer.ByteBuf;
@@ -23,8 +23,8 @@ public class Encoder extends MessageToByteEncoder<Object> {
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         if (msg instanceof NodeId){
             this.writeMessage(out, MessageConstants.MSG_TYPE_NODE_ID, ((NodeId) msg).getValue().getBytes());
-        }else if(msg instanceof RequestVoteReq){
-            RequestVoteReq req = (RequestVoteReq) msg;
+        }else if(msg instanceof RequestVoteRpc){
+            RequestVoteRpc req = (RequestVoteRpc) msg;
             String str = gson.toJson(req);
             this.writeMessage(out, MessageConstants.MSG_TYPE_REQUEST_VOTE_REQ, str);
         }else if(msg instanceof RequestVoteResult){

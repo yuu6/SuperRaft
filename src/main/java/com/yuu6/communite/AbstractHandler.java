@@ -2,7 +2,7 @@ package com.yuu6.communite;
 
 import com.google.common.eventbus.EventBus;
 import com.yuu6.communite.channels.NioChannel;
-import com.yuu6.election.AppendEntriesReqMessage;
+import com.yuu6.election.AppendEntriesRpcMessage;
 import com.yuu6.election.AppendEntriesResultMessage;
 import com.yuu6.mess.*;
 import com.yuu6.node.NodeId;
@@ -33,11 +33,11 @@ public class AbstractHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof RequestVoteReq){
-            RequestVoteReq req = (RequestVoteReq) msg;
+        if (msg instanceof RequestVoteRpc){
+            RequestVoteRpc req = (RequestVoteRpc) msg;
             System.out.println(String.format("接收到了 %s 请求投票的消息",  remoteId));
             // 投票的请求
-            eventBus.post(new RequestVoteReqMessage(req, remoteId, channel));
+            eventBus.post(new RequestVoteRpcMessage(req, remoteId, channel));
         }else if (msg instanceof RequestVoteResult){
             RequestVoteResult result = (RequestVoteResult) msg;
             System.out.println("处理投票结果："+  result.isVoteGranted());
@@ -54,7 +54,7 @@ public class AbstractHandler extends ChannelDuplexHandler {
             AppendEntriesReq result = (AppendEntriesReq) msg;
             System.out.println("收到了心跳消息！！");
             logger.debug("get AppendEntriesReq {}", msg);
-            eventBus.post(new AppendEntriesReqMessage(result, remoteId));
+            eventBus.post(new AppendEntriesRpcMessage(result, remoteId));
         }
     }
 
