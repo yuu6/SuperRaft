@@ -6,8 +6,19 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="SuperRaft" />
+        <module name="raft-example" />
+        <module name="raft-core" />
+        <module name="raft-springboot-start (1)" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="raft-springboot-start" target="8" />
+      <module name="raft-springboot-start (2)" target="8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="raft-example" options="-parameters" />
+    </option>
   </component>
 </project>
